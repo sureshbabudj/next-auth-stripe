@@ -1,16 +1,9 @@
-import { getServerSession } from "next-auth";
+import { MainMenubar } from "./ui/menu-bar";
 
-export default async function Home() {
-  const session = await getServerSession();
-
+export default async function Page() {
   return (
-    <>
-      getServerSession Result
-      {session?.user?.name ? (
-        <div>{session?.user?.name}</div>
-      ) : (
-        <div>Not logged in</div>
-      )}
-    </>
+    <section className="container px-0 sm:px-6 lg:px-8">
+      <MainMenubar />
+    </section>
   );
 }
