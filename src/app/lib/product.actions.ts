@@ -53,12 +53,19 @@ export async function getProduct(payload: any): Promise<{
   }
 }
 
-export async function getUserProducts(
+export interface GetUserProductsPayload {
+  page?: number;
+  limit?: number;
+  asc?: boolean;
+  sortBy?: string;
+}
+
+export async function getUserProducts({
   page = 1,
   limit = 10,
-  asc = false,
-  sortBy?: string
-): Promise<{
+  asc,
+  sortBy,
+}: GetUserProductsPayload): Promise<{
   err?: string;
   products: Product[];
   totalProducts: number;

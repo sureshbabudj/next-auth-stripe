@@ -1,8 +1,13 @@
 import { auth } from "@/auth";
 import { type NextRequest, NextResponse } from "next/server";
 
-function routeCheck(request: NextRequest) {
-  console.log("Request path:", request.nextUrl.pathname);
+const protectedRoutes = ["/dashboard"];
+
+async function routeCheck(request: NextRequest) {
+  const session = await auth();
+  if (protectedRoutes.includes(request.nextUrl.pathname) && !session) {
+    return NextResponse.redirect(new URL("/auth/signin", request.url));
+  }
   return null;
 }
 

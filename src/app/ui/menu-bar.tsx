@@ -105,7 +105,7 @@ export async function MainMenubar() {
               <MenubarSeparator />
               <MenubarItem>
                 <Link
-                  href="/profile"
+                  href="/dashboard"
                   className="flex justify-center content-center"
                 >
                   <BookUserIcon className="w-4 h-4 mr-2" />

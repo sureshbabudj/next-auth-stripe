@@ -25,8 +25,20 @@ export default async function Dashboard({
   const currentPage =
     Number(getValueOrDefault(searchParams["current-page"])) || 1;
   const limit = Number(getValueOrDefault(searchParams.limit)) || 10;
+  const sort = getValueOrDefault(searchParams.sort) || "";
 
-  const { products, totalProducts } = await getUserProducts(currentPage, limit);
+  let sortParams = {};
+  if (sort === "Lowest Price" || sort === "Highest Price") {
+    sortParams = {
+      sortBy: "price",
+      asc: sort !== "Lowest Price",
+    };
+  }
+  const { products, totalProducts } = await getUserProducts({
+    page: currentPage,
+    limit,
+    ...sortParams,
+  });
 
   return (
     <DashboardPage>
@@ -45,6 +57,7 @@ export default async function Dashboard({
           currentPage={currentPage}
           limit={limit}
           totalProducts={totalProducts}
+          sort={sort}
         />
       </DashboardPageContent>
     </DashboardPage>

@@ -1,13 +1,13 @@
 "use client";
 
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export interface DashboardPaginationProps {
   limit: number;
   totalProducts: number;
   currentPage: number;
-  onChange?: (currentPage: number) => void;
+  onChange?: (args: { currentPage: number }) => void;
 }
 
 export function DashboardPagination({
@@ -33,8 +33,12 @@ export function DashboardPagination({
 
   const handlePageClick = (page: number) => {
     setCurrentPage(page);
-    onChange && onChange(page);
+    onChange && onChange({ currentPage: page });
   };
+
+  useEffect(() => {
+    setCurrentPage(initialCurrentPage);
+  }, [initialCurrentPage]);
 
   if (totalProducts === 0) return <></>;
 

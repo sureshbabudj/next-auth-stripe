@@ -67,7 +67,8 @@ export function ProductsTable({
   limit,
   products: initailProducts,
   totalProducts: initailTotal,
-}: { products: Product[] } & Pick<
+  sort: initialSort,
+}: { products: Product[]; sort?: string } & Pick<
   DashboardPaginationProps,
   "limit" | "currentPage" | "totalProducts"
 >) {
@@ -77,42 +78,76 @@ export function ProductsTable({
   const [error, setError] = useState<string>("");
   const searchParams = useSearchParams();
 
-  function updateParams(currentPage: number, sortBy: string) {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("current-page", String(currentPage));
-    sortBy ? params.set("sort", sortBy) : params.delete("sort");
-    window.history.pushState(null, "", `?${params.toString()}`);
-  }
+  const tableHeaders = [
+    { title: "Id", value: "id", className: "text-left" },
+    { title: "", value: "images" },
+    { title: "Name", value: "name", className: "text-left" },
+    { title: "Category", value: "category", className: "text-left" },
+    { title: "Archived", value: "archived", className: "text-center" },
+    { title: "Price", value: "price", className: "text-right" },
+  ];
 
-  const handlePaginationChange = async (
-    currentPage: number,
-    asc = false,
-    sort = ""
-  ) => {
-    const { err, products, totalProducts } = await getUserProducts(
-      currentPage,
+  const sortParams = [
+    { title: "Default", field: "", sortDirection: "" },
+    { title: "Highest Price", field: "price", sortDirection: "asc" },
+    { title: "Lowest Price", field: "price", sortDirection: "desc" },
+  ];
+
+  const handlePaginationChange = async ({
+    currentPage,
+    sortDirection,
+    sort,
+  }: {
+    currentPage: number;
+    sortDirection?: "asc" | "desc";
+    sort?: string;
+  }) => {
+    const { err, products, totalProducts } = await getUserProducts({
+      page: currentPage,
       limit,
-      asc,
-      sort
-    );
+      asc: sortDirection === "asc",
+      sortBy: sort,
+    });
     if (err) {
       setError(err);
       return;
     }
     setProducts(products);
     setTotalProducts(totalProducts);
-    updateParams(currentPage, sort);
+    setCurrentPage(currentPage);
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("current-page", String(currentPage));
+    if (sort) {
+      const sortValue = sortParams.find(
+        (i) => i.field === sort && i.sortDirection === sortDirection
+      );
+      sortValue?.title && params.set("sort", sortValue.title);
+    } else {
+      params.delete("sort");
+    }
+    window.history.pushState(null, "", `?${params.toString()}`);
   };
 
   const handleSort = (sort: string) => {
     setCurrentPage(1);
     switch (sort) {
-      case "Higest Price":
-        handlePaginationChange(1, false, "price");
-      case "Lowest Price":
-        handlePaginationChange(1, true, "price");
+      case sortParams[1].title:
+        handlePaginationChange({
+          currentPage: 1,
+          sortDirection: "asc",
+          sort: "price",
+        });
+        break;
+      case sortParams[2].title:
+        handlePaginationChange({
+          currentPage: 1,
+          sortDirection: "desc",
+          sort: "price",
+        });
+        break;
       default:
-        handlePaginationChange(1);
+        handlePaginationChange({ currentPage: 1 });
     }
   };
 
@@ -125,15 +160,6 @@ export function ProductsTable({
       </Alert>
     );
   }
-
-  const tableHeaders = [
-    { title: "Id", value: "id", className: "text-left" },
-    { title: "", value: "images" },
-    { title: "Name", value: "name", className: "text-left" },
-    { title: "Category", value: "category", className: "text-left" },
-    { title: "Archived", value: "archived", className: "text-center" },
-    { title: "Price", value: "price", className: "text-right" },
-  ];
 
   return (
     <DashboardTableWrapper>
@@ -150,15 +176,17 @@ export function ProductsTable({
           </SelectContent>
         </Select>
         <DasboardTableHeaderRight>
-          <Select onValueChange={handleSort}>
+          <Select onValueChange={handleSort} defaultValue={initialSort}>
             <SelectTrigger className="w-[12rem]">
               <ArrowDownUpIcon className="text-gray-400 w-5 h-5" />
               <SelectValue placeholder="Sort" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Default">Default</SelectItem>
-              <SelectItem value="Highest Price">Highest Price</SelectItem>
-              <SelectItem value="Lowest Price">Lowest Price</SelectItem>
+              {sortParams.map((param) => (
+                <SelectItem key={param.title} value={param.title}>
+                  {param.title}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </DasboardTableHeaderRight>
