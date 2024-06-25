@@ -9,21 +9,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import {
-  DashboardPageHeaderActionMenu,
-  DashboardPageHeaderAction,
-} from "../components/DashboardPageHeaderActionMenu";
+import { DashboardPageHeaderActionMenu } from "../components/DashboardPageHeaderActionMenu";
+import { ProductPageHeaderAction } from "./ProductForm";
 
 export function ProductsPageActionMenu() {
-  const handleCreateProduct = () => {
-    console.log("create product");
-  };
   return (
     <DashboardPageHeaderActionMenu>
-      <DashboardPageHeaderAction
-        actionTitle="Create Product"
-        onActionClick={handleCreateProduct}
-      />
+      <ProductPageHeaderAction />
       <DropdownMenu>
         <DropdownMenuTrigger>
           <DropdoemMenuTriggerEllipsis />

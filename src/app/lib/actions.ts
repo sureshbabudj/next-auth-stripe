@@ -31,8 +31,10 @@ export async function signup(formData: FormData) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       errMesssage = error.errors.map((e) => e.message).join(", ");
+    } else if (error instanceof Error) {
+      errMesssage = error.message;
     } else {
-      errMesssage = (error as any).message ?? "Something went wrong";
+      errMesssage = "Something went wrong";
     }
     errMesssage = encodeURIComponent(errMesssage);
   }
@@ -46,7 +48,8 @@ export async function getUser(email: string, password: string) {
     if (!user) throw "User not found";
     const isPasswordValid = await bcrypt.compareSync(password, user.password!);
     if (!isPasswordValid) throw "Invalid password";
-    return { email: user.email, name: user.name };
+    const { name, id } = user;
+    return { email, name, id };
   } catch (error) {
     console.log(error);
     return null;

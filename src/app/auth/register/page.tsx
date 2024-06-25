@@ -11,7 +11,7 @@ export default function RegisterPage({
     <main className="flex items-center justify-center md:h-screen">
       <div className="relative mx-auto flex w-full max-w-[400px] flex-col space-y-2.5 p-4">
         <div className="flex w-full items-end rounded-l p-3 justify-center">
-          <div className="text-5xl">
+          <div className="text-5xl flex">
             <Logo />
           </div>
         </div>

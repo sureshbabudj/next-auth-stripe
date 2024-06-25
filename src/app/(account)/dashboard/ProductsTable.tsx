@@ -75,6 +75,7 @@ export function ProductsTable({
   const [products, setProducts] = useState(initailProducts);
   const [totalProducts, setTotalProducts] = useState(initailTotal);
   const [currentPage, setCurrentPage] = useState(initialPage);
+  const [sort, setSort] = useState(initialSort);
   const [error, setError] = useState<string>("");
   const searchParams = useSearchParams();
 
@@ -129,26 +130,32 @@ export function ProductsTable({
     window.history.pushState(null, "", `?${params.toString()}`);
   };
 
-  const handleSort = (sort: string) => {
-    setCurrentPage(1);
+  const getSortValues = (
+    sort: string
+  ): { sortDirection?: "asc" | "desc"; sort?: string } => {
     switch (sort) {
       case sortParams[1].title:
-        handlePaginationChange({
-          currentPage: 1,
+        return {
           sortDirection: "asc",
           sort: "price",
-        });
-        break;
+        };
       case sortParams[2].title:
-        handlePaginationChange({
-          currentPage: 1,
+        return {
           sortDirection: "desc",
           sort: "price",
-        });
-        break;
+        };
       default:
-        handlePaginationChange({ currentPage: 1 });
+        return {};
     }
+  };
+
+  const handleSort = (sortValue: string) => {
+    setCurrentPage(1);
+    setSort(sortValue);
+    handlePaginationChange({
+      currentPage: 1,
+      ...getSortValues(sortValue),
+    });
   };
 
   if (error) {
@@ -228,7 +235,12 @@ export function ProductsTable({
         currentPage={currentPage}
         limit={limit}
         totalProducts={totalProducts}
-        onChange={handlePaginationChange}
+        onChange={(page) =>
+          handlePaginationChange({
+            currentPage: page,
+            ...getSortValues(sort ?? ""),
+          })
+        }
       />
     </DashboardTableWrapper>
   );

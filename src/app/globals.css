@@ -13,11 +13,11 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 333 71% 51%; /* Pink */
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 313 41% 38%; /* Medium Pink */
+    --secondary-foreground: 270 100% 70%; /* Medium Purple */
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
@@ -25,8 +25,8 @@
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 100% 50%; /* Red */
+    --destructive-foreground: 270 100% 50%; /* Purple */
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;

@@ -26,10 +26,9 @@ export const authConfig = {
           const { email, password } = parsedCredentials.data;
           const user = await getUser(email, password);
           if (user) {
-            return user;
+            return { user, id: String(user.id) };
           }
         }
-
         return null;
       },
     }),
@@ -56,6 +55,12 @@ export const authConfig = {
         return true;
       }
       return false;
+    },
+    session({ session, token }) {
+      return {
+        ...session,
+        user: { ...session.user, id: token.sub },
+      };
     },
   },
 } satisfies NextAuthConfig;

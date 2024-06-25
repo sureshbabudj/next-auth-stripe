@@ -7,7 +7,7 @@ export interface DashboardPaginationProps {
   limit: number;
   totalProducts: number;
   currentPage: number;
-  onChange?: (args: { currentPage: number }) => void;
+  onChange?: (page: number) => void;
 }
 
 export function DashboardPagination({
@@ -33,7 +33,7 @@ export function DashboardPagination({
 
   const handlePageClick = (page: number) => {
     setCurrentPage(page);
-    onChange && onChange({ currentPage: page });
+    onChange && onChange(page);
   };
 
   useEffect(() => {

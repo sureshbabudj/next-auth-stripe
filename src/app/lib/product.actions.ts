@@ -2,18 +2,34 @@
 
 import { PrismaClient, Product, User } from "@prisma/client";
 import {
+  FieldFileType,
   archiveProductSchema,
   deleteProductSchema,
   getProductSchema,
   productSchema,
   updateProductSchema,
+  zodKeys,
 } from "../zod/schema";
 import { SafeParseError } from "zod";
 import { auth } from "@/auth";
+import { promises as fs } from "fs";
+import { join } from "path";
+import { writeFile } from "fs/promises";
+import { randomUUID } from "crypto";
 
 const prisma = new PrismaClient();
 
-function handleZodErrors(result: SafeParseError<any>) {
+function handleZodErrors(
+  result: SafeParseError<{
+    id: number;
+    name: string;
+    description: string;
+    images: FieldFileType[];
+    videos: string;
+    price: number;
+    category: string;
+  }>
+) {
   return result.error.errors.map((e) => e.message).join(", ");
 }
 
@@ -24,10 +40,10 @@ async function getCurrentUser(): Promise<Omit<User, "password">> {
     throw { err: "no user found" };
   }
 
-  return user;
+  return { ...user, id: Number(user.id) };
 }
 
-export async function getProduct(payload: any): Promise<{
+export async function getProduct(payload: unknown): Promise<{
   err?: string;
   product?: Product;
 }> {
@@ -43,13 +59,16 @@ export async function getProduct(payload: any): Promise<{
     });
 
     if (!product) {
-      return { err: "nno product found" };
+      return { err: "no product found" };
     }
 
     return { product };
-  } catch (error: any) {
-    console.log(error);
-    return { err: error.message ?? "Something went wrong" };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { err: error.message };
+    } else {
+      return { err: "Something went wrong" };
+    }
   }
 }
 
@@ -85,37 +104,90 @@ export async function getUserProducts({
     });
 
     return { products, totalProducts };
-  } catch (error: any) {
-    console.log(error);
-    return {
-      err: error.message ?? "Something went wrong",
-      products: [],
-      totalProducts: 0,
-    };
+  } catch (error) {
+    const defautReturnParams = { products: [], totalProducts: 0 };
+    if (error instanceof Error) {
+      return { err: error.message, ...defautReturnParams };
+    } else {
+      return { err: "Something went wrong", ...defautReturnParams };
+    }
   }
 }
 
-export async function createProduct(payload: any): Promise<{
+async function grabFile(file: File) {
+  if (!file) throw new Error("No file uploaded");
+
+  const bytes = await file.arrayBuffer();
+  const buffer = Buffer.from(bytes);
+  const dest = "./public/uploads";
+  const fileName = `${randomUUID()}.${file.name.split(".")[1]}`;
+  const dirPath = join(process.cwd(), dest);
+  await fs.mkdir(dirPath, { recursive: true });
+  const path = join(dest, fileName);
+  await writeFile(path, buffer);
+  return { success: true, path: `/uploads/${fileName}` };
+}
+
+async function grabFiles(images: File[]): Promise<string[]> {
+  return Promise.all(images.map(async (i) => (await grabFile(i)).path));
+}
+
+export async function createProduct(formData: FormData): Promise<{
   err?: string;
   product?: Product;
 }> {
   try {
     const user = await getCurrentUser();
-    const result = productSchema.safeParse(payload);
-    if (!result.success) {
-      return { err: handleZodErrors(result) };
+
+    const payload: { images: File[]; price: string } & Partial<
+      Omit<Product, "images" | "price">
+    > = {
+      name: "",
+      images: [],
+      description: "",
+      price: "",
+      videos: "",
+      category: "",
+    };
+
+    for (let [key, value] of formData.entries()) {
+      if (key === "images[]" && value instanceof File) {
+        payload.images.push(value);
+      } else if (payload.hasOwnProperty(key) && value) {
+        // @ts-expect-error
+        payload[key] = value;
+      }
+    }
+
+    if (payload.images.length === 0) {
+      return { err: "Images are missing for product" };
+    }
+
+    const uploads: string[] = await grabFiles(payload.images);
+    const images = uploads.join(",");
+
+    const results = productSchema.safeParse(payload);
+    if (results.error) {
+      return { err: handleZodErrors(results) };
     }
     const product = await prisma.product.create({
-      data: { ...result.data, userId: user.id },
+      data: {
+        ...results.data!,
+        images,
+        userId: user.id,
+      },
     });
     return { product };
-  } catch (error: any) {
-    console.log(error);
-    return { err: error.message ?? "Something went wrong" };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { err: error.message };
+    } else {
+      return { err: "Something went wrong" };
+    }
   }
 }
 
-export async function updateProduct(payload: any): Promise<{
+export async function updateProduct(payload: unknown): Promise<{
   err?: string;
   product?: Product;
 }> {
@@ -137,17 +209,20 @@ export async function updateProduct(payload: any): Promise<{
 
     const updatedProduct = await prisma.product.update({
       where: { id: result.data.id },
-      data: result.data,
+      data: { ...result.data, images: JSON.stringify(result.data.images) },
     });
 
     return { product: updatedProduct };
-  } catch (error: any) {
-    console.log(error);
-    return { err: error.message ?? "Something went wrong" };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { err: error.message };
+    } else {
+      return { err: "Something went wrong" };
+    }
   }
 }
 
-export async function archiveProduct(payload: any): Promise<{
+export async function archiveProduct(payload: unknown): Promise<{
   err?: string;
   product?: Product;
 }> {
@@ -173,13 +248,16 @@ export async function archiveProduct(payload: any): Promise<{
     });
 
     return { product: archivedProduct };
-  } catch (error: any) {
-    console.log(error);
-    return { err: error.message ?? "Something went wrong" };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { err: error.message };
+    } else {
+      return { err: "Something went wrong" };
+    }
   }
 }
 
-export async function deleteProduct(payload: any): Promise<{
+export async function deleteProduct(payload: unknown): Promise<{
   err?: string;
   product?: Product;
 }> {
@@ -200,8 +278,11 @@ export async function deleteProduct(payload: any): Promise<{
     });
 
     return { product: deletedProduct };
-  } catch (error: any) {
-    console.log(error);
-    return { err: error.message ?? "Something went wrong" };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { err: error.message };
+    } else {
+      return { err: "Something went wrong" };
+    }
   }
 }
