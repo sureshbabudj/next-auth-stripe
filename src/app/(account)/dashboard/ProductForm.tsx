@@ -80,7 +80,13 @@ export function ProductPageHeaderAction() {
 
   return (
     <DashboardPageHeaderAction>
-      <Sheet open={open} onOpenChange={setOpen}>
+      <Sheet
+        open={open}
+        onOpenChange={() => {
+          setOpen(!open);
+          form.reset();
+        }}
+      >
         <SheetTrigger asChild>
           <button className="text-sm dark:text-white bg-pink-600 px-4 py-2 rounded text-white">
             Create Product

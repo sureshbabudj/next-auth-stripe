@@ -166,7 +166,7 @@ export async function createProduct(formData: FormData): Promise<{
     const uploads: string[] = await grabFiles(payload.images);
     const images = uploads.join(",");
 
-    const results = productSchema.safeParse(payload);
+    const results = productSchema.omit({ images: true }).safeParse(payload);
     if (results.error) {
       return { err: handleZodErrors(results) };
     }
